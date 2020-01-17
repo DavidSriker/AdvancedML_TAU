@@ -2,11 +2,7 @@ import numpy as np
 import cvxopt
 import copy
 
-
 class Perceptron():
-    """
-    simple perceptron model
-    """
     def __init__(self, lr=0.01, num_epochs=50, seed=2020):
         self.lr = lr
         self.num_epochs = num_epochs
@@ -48,9 +44,6 @@ def polynomial_kernel(x1, x2, p=3):
 
 
 class SVM():
-    """
-    simple binary hard margin SVM model
-    """
     def __init__(self, kernel=linear_kernel, C=None):
         self.kernel = kernel
         self.C = float(C) if C is not None else C
@@ -59,7 +52,6 @@ class SVM():
         n_samples, n_features = X.shape
         # gram matrix
         K = self.kernel(X, X)
-
         P = cvxopt.matrix(np.outer(y, y) * K)
         q = cvxopt.matrix(np.ones(n_samples) * -1)
         A = cvxopt.matrix(y, (1, n_samples))
@@ -81,12 +73,12 @@ class SVM():
 
         # support vectors have non zero lagrange multipliers
         sv = a > 1e-5
-        self.a = a
+        self.a = a * sv
         self.sv = np.zeros(X.shape)
         self.sv[sv] = X[sv]
         self.sv_y = np.zeros(y.shape)
         self.sv_y[sv] = y[sv]
-        self.b = (np.sum(self.sv_y) - np.sum(self.a * self.sv_y * K)) / sum(sv)
+        self.b = (np.sum(self.sv_y) - np.sum(self.a * self.sv_y * K[sv, :])) / sum(sv)
         # weight vector
         if self.kernel == linear_kernel:
             self.w = np.dot(self.a * self.sv_y, self.sv)
