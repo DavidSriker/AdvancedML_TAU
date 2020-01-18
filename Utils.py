@@ -4,6 +4,9 @@ from mlxtend.data import loadlocal_mnist
 import os
 
 
+def normalizeByMax(data):
+    return data / np.max(data)
+
 # multivariate normal distribution
 def multivariateNormalCreate(means, covariances, num_samples):
     """
@@ -21,8 +24,12 @@ def multivariateNormalCreate(means, covariances, num_samples):
     else:
         num_x_1 = num_x_2 = round (num_samples / 2)
 
-    x_1 = np.random.multivariate_normal(means[0], covariances[0], num_x_1)
-    x_2 = np.random.multivariate_normal(means[1], covariances[1], num_x_2)
+    x_1 = normalizeByMax(np.random.multivariate_normal(means[0],
+                                                        covariances[0],
+                                                        num_x_1))
+    x_2 = normalizeByMax(np.random.multivariate_normal(means[1],
+                                                        covariances[1],
+                                                        num_x_2))
     return setLabels(x_1, 1.0), setLabels(x_2, -1.0)
 
 def setLabels(data, label):
@@ -53,6 +60,13 @@ def plotMultivariateData(data, save_flag=False):
         plt.scatter(x[:,0], x[:,1], c=mapping[l][0], marker=mapping[l][1])
     if not save_flag:
         plt.show()
+        time.sleep(5.5)
+    else:
+        im_path = os.path.join(os.getcwd(), "images")
+        if not os.path.exists(im_path):
+            os.makedirs(im_path)
+        plt.savefig(os.path.join(im_path, 'MultivariateData.png'))
+    plt.close()
     return
 
 # MNIST
@@ -137,6 +151,7 @@ def mnistPipeline(dir_path, desired_digits):
     """
     data_path = os.path.join(os.getcwd(), "mnist_data")
     train_im, train_lbl, test_im, test_lbl = readMnistData(dir_path)
+    train_im = normalizeByMax(train_im)
     train_im, train_lbl = sortMnistData(train_im, train_lbl)
     # test_im, test_lbl = sortMnistData(test_im, test_lbl)
     train_slices = findLabelSlices(train_lbl)
@@ -148,3 +163,71 @@ def mnistPipeline(dir_path, desired_digits):
     labels = np.concatenate((binary_data[0]["lbl"],
                             binary_data[1]["lbl"]))
     return np.append(data, labels.reshape((labels.shape[0], 1)), axis=1)
+
+def trainTestValidationSplit(data, train_frac=0.8, validation_frac=0.1):
+    """
+    divide the data to train, test and validation sets
+    input:
+        1. data matrix
+        2. training fraction for the splitting
+        3. validation fraction for the splitting
+    output:
+        1. train matrix
+        2. test matrix
+        3. validation matrix
+    """
+    num_sampeles = data.shape[0]
+    train = data[:int(num_sampeles * train_frac)]
+    test = data[int(num_sampeles * train_frac):]
+    num_samples = train.shape[0]
+    validation = train[:int(num_sampeles * validation_frac)]
+    train = train[int(num_sampeles * validation_frac):]
+    return train, test, validation
+
+def getTheorticalLambda(data):
+    """
+    find the best theortical lambda for the regulizer based on theory
+    input:
+        1. data matrix
+    output:
+        1. the theortical best lambda
+    """
+    B = np.max(np.linalg.norm(data[:, :-1], axis=1))
+    L = 1
+    n = data.shape[0]
+    C = np.sqrt((8 * L * B ** 2) / n)
+    return C
+
+def exportPlots(C, C_theory, loss, test_acc, val_acc, data_name):
+    """
+    export the experiment plots to images directory
+    input:
+        1. vector of the used C values
+        2. theortical best C value
+        3. loss values vector
+        4. test accuracy values vector
+        5. validation accuracy values vector
+        6. string that indicate what is the source of the data
+    output:
+        void
+    """
+    im_path = os.path.join(os.getcwd(), "images")
+    if not os.path.exists(im_path):
+        os.makedirs(im_path)
+
+    print(20 * "*", data_name, 20 * "*")
+    print("Theoretical C: {:}".format(C_theory))
+    print("Best Accuaracy on test: {:} for C: {:}".format(test_acc[np.argmax(test_acc)],
+                                                            C[np.argmax(test_acc)]))
+    print("Best Accuaracy on validation: {:} for C: {:}".format(val_acc[np.argmax(val_acc)],
+                                                                C[np.argmax(val_acc)]))
+
+    plt.scatter(C, val_acc, color='k')
+    plt.scatter(C, test_acc, color='r')
+    plt.savefig(os.path.join(im_path, '{:}_acc.png'.format(data_name)))
+    plt.close()
+
+    plt.scatter(C, loss, color='k')
+    plt.savefig(os.path.join(im_path, '{:}_loss.png'.format(data_name)))
+    plt.close()
+    return
