@@ -13,7 +13,7 @@ multi_data = np.append(d_1, d_2, axis=0)
 plotMultivariateData(multi_data, True)
 
 data_path = os.path.join(os.getcwd(), "mnist_data")
-desired_digits = [2, 9]
+desired_digits = [3, 8]
 mnist_data = mnistPipeline(data_path, desired_digits)
 
 # split to train and test
@@ -31,7 +31,7 @@ for i in range(2):
     hinge = np.array([])
     if not i:
         # Multivariate
-        C = np.linspace(0,3,60)
+        C = np.linspace(0, 3, 60)
         theortical_C = getTheorticalLambda(multi_train)
         C = np.append(C, theortical_C)
         train, train_lbl = multi_train[:, :-1], multi_train[:, -1]
@@ -39,7 +39,7 @@ for i in range(2):
         val, val_lbl = multi_val[:, :-1], multi_val[:, -1]
     else:
         # MNIST
-        C = np.linspace(0,5,60)
+        C = np.linspace(0, 5, 60)
         theortical_C = getTheorticalLambda(mnist_train)
         C = np.append(C, theortical_C)
         train, train_lbl = mnist_train[:, :-1], mnist_train[:, -1]
@@ -55,5 +55,10 @@ for i in range(2):
         acc_test = np.append(acc_test, accuracy_score(test_lbl, svm_mdl.predict(test)))
         acc_val = np.append(acc_val, accuracy_score(val_lbl, svm_mdl.predict(val)))
 
-    exportPlots(C, theortical_C, hinge, acc_test, acc_val, "Multivariate" if not i else "MNIST")
+    if not i:
+        exportPlots(C, theortical_C, hinge, acc_test, acc_val, "Multivariate")
+    else:
+        exportPlots(C, theortical_C, hinge, acc_test, acc_val, "MNIST", True, list(map(str, desired_digits)))
+
+
 print("Done")
