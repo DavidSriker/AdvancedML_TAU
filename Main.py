@@ -15,17 +15,21 @@ plotMultivariateData(multi_data, True)
 data_path = os.path.join(os.getcwd(), "mnist_data")
 desired_digits = [3, 8]
 mnist_data = mnistPipeline(data_path, desired_digits)
+desired_iris = [1, 2]
+iris_data = irisPipeline(desired_iris)
 
 # split to train and test
 split_factor = 0.8
 
 np.random.shuffle(multi_data)
 np.random.shuffle(mnist_data)
+np.random.shuffle(iris_data)
 multi_train, multi_test, multi_val = trainTestValidationSplit(multi_data)
 mnist_train, mnist_test, mnist_val = trainTestValidationSplit(mnist_data)
+iris_train, iris_test, iris_val = trainTestValidationSplit(iris_data)
 
-# experinment
-for i in range(2):
+# experiment
+for i in range(3):
     acc_test = np.array([])
     acc_val = np.array([])
     hinge = np.array([])
@@ -37,6 +41,13 @@ for i in range(2):
         train, train_lbl = multi_train[:, :-1], multi_train[:, -1]
         test, test_lbl = multi_test[:, :-1], multi_test[:, -1]
         val, val_lbl = multi_val[:, :-1], multi_val[:, -1]
+    elif i == 1:
+        C = np.linspace(0, 3, 60)
+        theortical_C = getTheorticalLambda(iris_train)
+        C = np.append(C, theortical_C)
+        train, train_lbl = iris_train[:, :-1], iris_train[:, -1]
+        test, test_lbl = iris_test[:, :-1], iris_test[:, -1]
+        val, val_lbl = iris_val[:, :-1], iris_val[:, -1]
     else:
         # MNIST
         C = np.linspace(0, 5, 60)
@@ -45,7 +56,8 @@ for i in range(2):
         train, train_lbl = mnist_train[:, :-1], mnist_train[:, -1]
         test, test_lbl = mnist_test[:, :-1], mnist_test[:, -1]
         val, val_lbl = mnist_val[:, :-1], mnist_val[:, -1]
-
+    if i == 2:
+        break
     C = C[1:]
     np.sort(C)
     for c in C:
@@ -57,6 +69,8 @@ for i in range(2):
 
     if not i:
         exportPlots(C, theortical_C, hinge, acc_test, acc_val, "Multivariate")
+    elif i == 1:
+        exportPlots(C, theortical_C, hinge, acc_test, acc_val, "IRIS")
     else:
         exportPlots(C, theortical_C, hinge, acc_test, acc_val, "MNIST", True, list(map(str, desired_digits)))
 

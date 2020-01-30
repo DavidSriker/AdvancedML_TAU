@@ -1,6 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
-from mlxtend.data import loadlocal_mnist
+from mlxtend.data import loadlocal_mnist, iris_data
 import os
 import time
 
@@ -138,7 +138,7 @@ def getDesiredDigitsData(images, digits, slices):
         1. a dictionary that contain the data for the 2 digits with the labels
         being -1 or 1
     """
-    assert len(digits)==2, "should get only 2 digits"
+    assert len(digits) == 2, "should get only 2 digits"
     data_dict = {}
     for i, d in enumerate(digits):
         sliced_im = images[np.arange(*slices[d])]
@@ -171,6 +171,22 @@ def mnistPipeline(dir_path, desired_digits):
                             binary_data[1]["lbl"]))
     return np.append(data, labels.reshape((labels.shape[0], 1)), axis=1)
 
+def irisPipeline(desired_lbl):
+    """
+    divide the data to train, test and validation sets
+    input:
+        1. TODO
+    output:
+        1. TODO
+    """
+    assert len(desired_lbl) == 2, "should get only 2 labels"
+    data, lbl = iris_data()
+    data = normalizeByMax(data)
+    sliced_lbl = np.logical_or(lbl == desired_lbl[0], lbl == desired_lbl[1])
+    sliced_data = data[sliced_lbl, :]
+    sliced_lbl = lbl[sliced_lbl]
+    return np.append(sliced_data, sliced_lbl.reshape(sliced_lbl.shape[0], 1), axis=1)
+
 def trainTestValidationSplit(data, train_frac=0.8, validation_frac=0.1):
     """
     divide the data to train, test and validation sets
@@ -183,12 +199,12 @@ def trainTestValidationSplit(data, train_frac=0.8, validation_frac=0.1):
         2. test matrix
         3. validation matrix
     """
-    num_sampeles = data.shape[0]
-    train = data[:int(num_sampeles * train_frac)]
-    test = data[int(num_sampeles * train_frac):]
-    num_samples = train.shape[0]
-    validation = train[:int(num_sampeles * validation_frac)]
-    train = train[int(num_sampeles * validation_frac):]
+    data_num_samples = data.shape[0]
+    train = data[:int(data_num_samples * train_frac)]
+    test = data[int(data_num_samples * train_frac):]
+    train_num_samples = train.shape[0]
+    validation = train[:int(train_num_samples * validation_frac)]
+    train = train[int(train_num_samples * validation_frac):]
     return train, test, validation
 
 def getTheorticalLambda(data):
@@ -312,18 +328,3 @@ def generateMnistFigure(mnist_data, mnist_labels):
                 pad_inches=0)
     plt.close(fig)
     return
-
-
-
-# # sample image plotter
-# def plotSamples(img_idx, plot_idx, line_num_figures, line):
-#   fig_mat = train.train_data[img_idx].numpy()
-#   subplot(line,line_num_figures,plot_idx)
-#   pyplot.imshow(fig_mat)
-#   pyplot.title("Class is: " + classes[train.train_labels[img_idx]])
-#
-# line_total_figs = 4
-# lines = 3
-# sample_images = np.random.choice(train_idx, lines*line_total_figs)
-# for i in range(0, lines*line_total_figs):
-#   plotSamples(sample_images[i],1+i, line_total_figs, lines)
