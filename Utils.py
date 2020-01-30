@@ -6,6 +6,13 @@ import time
 
 
 def normalizeByMax(data):
+    """
+    normalize the data matrix row-wise
+    input:
+        1. nd.array of data
+    output:
+        1. nd.array of normalized data
+    """
     return data / np.max(data)
 
 # multivariate normal distribution
@@ -153,7 +160,7 @@ def mnistPipeline(dir_path, desired_digits):
         1. the mnist files directory
         2. the desired digits to extract
     output:
-        1. a nd.array of data concatenated with labels
+        1. nd.array of data concatenated with labels
     """
     data_path = os.path.join(os.getcwd(), "mnist_data")
     train_im, train_lbl, test_im, test_lbl = readMnistData(dir_path)
@@ -175,9 +182,11 @@ def irisPipeline(desired_lbl):
     """
     divide the data to train, test and validation sets
     input:
-        1. TODO
+        1. a list of the desired iris lables: Setosa - 0
+                                              Versicolor - 1
+                                              Virginica - 2
     output:
-        1. TODO
+        1. nd.array of data concatenated with labels
     """
     assert len(desired_lbl) == 2, "should get only 2 labels"
     data, lbl = iris_data()
@@ -244,25 +253,25 @@ def exportPlots(C, C_theory, loss, test_acc, val_acc, data_name, mnist_flag=Fals
                                                                                     C[np.argmax(test_acc)], val_acc[np.argmax(test_acc)]))
     print("Best Accuaracy on validation: {:} for C: {:}, while test is: {:}".format(val_acc[np.argmax(val_acc)],
                                                                                     C[np.argmax(val_acc)], test_acc[np.argmax(val_acc)]))
-    print("Accuaracy on validation and test (theory): {:} for C: {:}".format(val_acc[np.where(C_theory == C)],
+    print("Accuaracy on validation and test (theory): valid - {:}, test - {:}".format(val_acc[np.where(C_theory == C)],
                                                                              test_acc[np.where(C_theory == C)]))
 
     theory_idx = np.where(C == C_theory)
     top_val_idx = np.argmax(val_acc)
     top_test_idx = np.argmax(test_acc)
     for idx, c in enumerate(C):
-        if idx not in [top_val_idx, top_test_idx, theory_idx[0]]:
-            plt.scatter(c, val_acc[idx], color='k', marker="o", s=15)
-            plt.scatter(c, test_acc[idx], color='r', marker="o", s=15)
+        if idx not in [top_val_idx, top_test_idx, *theory_idx] and not np.isclose(c, C_theory, rtol=10E-2):
+            plt.scatter(c, val_acc[idx], color='k', marker="o", s=20)
+            plt.scatter(c, test_acc[idx], color='r', marker="o", s=20)
         elif idx == top_val_idx:
-            plt.scatter(c, val_acc[idx], color='b', s=15, marker="d", label="Top Valid. Coeff (valid)")
-            plt.scatter(c, test_acc[idx], color='c', s=15, marker="d", label="Top Valid. Coeff (test)")
+            plt.scatter(c, val_acc[idx], color='b', s=20, marker="d", label="Top Valid. Coeff (valid)")
+            plt.scatter(c, test_acc[idx], color='c', s=20, marker="d", label="Top Valid. Coeff (test)")
         elif idx == top_test_idx:
-            plt.scatter(c, val_acc[idx], color='g', s=15, marker="d", label="Top Valid. Coeff (valid)")
-            plt.scatter(c, test_acc[idx], color='purple', s=15, marker="d", label="Top Valid. Coeff (test)")
+            plt.scatter(c, val_acc[idx], color='g', s=20, marker="d", label="Top Valid. Coeff (valid)")
+            plt.scatter(c, test_acc[idx], color='purple', s=20, marker="d", label="Top Valid. Coeff (test)")
 
-    plt.scatter(c, val_acc[theory_idx[0]], color='m', s=10, marker="X", label="Theory Coeff (valid)")
-    plt.scatter(c, test_acc[theory_idx[0]], color='y', s=10, marker="X", label="Theory Coeff (test)")
+    plt.scatter(c, val_acc[theory_idx[0]], color='m', s=20, marker="X", label="Theory Coeff (valid)")
+    plt.scatter(c, test_acc[theory_idx[0]], color='y', s=20, marker="X", label="Theory Coeff (test)")
 
     plt.legend()
     plt.xlabel(r"$\lambda$ Value")

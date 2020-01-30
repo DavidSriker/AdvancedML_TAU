@@ -1,8 +1,7 @@
 from Models import *
 from Utils import *
-from sklearn.svm import SVC, LinearSVC
+from sklearn.svm import SVC
 from sklearn.metrics import hinge_loss, accuracy_score
-from sklearn.model_selection import GridSearchCV
 
 np.random.seed(2020)
 
@@ -56,10 +55,10 @@ for i in range(3):
         train, train_lbl = mnist_train[:, :-1], mnist_train[:, -1]
         test, test_lbl = mnist_test[:, :-1], mnist_test[:, -1]
         val, val_lbl = mnist_val[:, :-1], mnist_val[:, -1]
-    if i == 2:
-        break
+
     C = C[1:]
     np.sort(C)
+    C = C[np.where(C <= 1)]
     for c in C:
         svm_mdl = SVC(kernel='linear', C=c)
         svm_mdl.fit(train, train_lbl)
