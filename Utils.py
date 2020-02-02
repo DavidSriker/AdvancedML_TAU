@@ -1,6 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
-from mlxtend.data import loadlocal_mnist, iris_data
+from mlxtend.data import loadlocal_mnist, iris_data, wine_data
 import os
 import time
 
@@ -178,6 +178,22 @@ def mnistPipeline(dir_path, desired_digits):
                             binary_data[1]["lbl"]))
     return np.append(data, labels.reshape((labels.shape[0], 1)), axis=1)
 
+def binarizeLabels(labels_vec):
+    """
+    binarize the labels to be -1,1 arbitrary
+    input:
+        1. nd.array of the labels
+    output:
+        1. nd.array of the binarized labels
+    """
+    binarized_lbl = np.ones(labels_vec.shape)
+    unique_lbl = np.unique(labels_vec)
+    mapper = {unique_lbl[0]: 1, unique_lbl[1]: -1}
+    for l in unique_lbl:
+        idx = np.where(labels_vec == l)
+        binarized_lbl[idx] *= mapper[l]
+    return binarized_lbl
+
 def irisPipeline(desired_lbl):
     """
     divide the data to train, test and validation sets
@@ -186,7 +202,7 @@ def irisPipeline(desired_lbl):
                                               Versicolor - 1
                                               Virginica - 2
     output:
-        1. nd.array of data concatenated with labels
+        1. nd.array of data concatenated with binarized labels
     """
     assert len(desired_lbl) == 2, "should get only 2 labels"
     data, lbl = iris_data()
@@ -194,7 +210,27 @@ def irisPipeline(desired_lbl):
     sliced_lbl = np.logical_or(lbl == desired_lbl[0], lbl == desired_lbl[1])
     sliced_data = data[sliced_lbl, :]
     sliced_lbl = lbl[sliced_lbl]
-    return np.append(sliced_data, sliced_lbl.reshape(sliced_lbl.shape[0], 1), axis=1)
+    binary_lbl = binarizeLabels(sliced_lbl)
+    return np.append(sliced_data, binary_lbl.reshape(binary_lbl.shape[0], 1), axis=1)
+
+def winePipeline(desired_lbl):
+    """
+        divide the data to train, test and validation sets
+        input:
+            1. a list of the desired wine lables:   0
+                                                    1
+                                                    2
+        output:
+            1. nd.array of data concatenated with binarized labels
+        """
+    assert len(desired_lbl) == 2, "should get only 2 labels"
+    data, lbl = wine_data()
+    data = normalizeByMax(data)
+    sliced_lbl = np.logical_or(lbl == desired_lbl[0], lbl == desired_lbl[1])
+    sliced_data = data[sliced_lbl, :]
+    sliced_lbl = lbl[sliced_lbl]
+    binary_lbl = binarizeLabels(sliced_lbl)
+    return np.append(sliced_data, binary_lbl.reshape(binary_lbl.shape[0], 1), axis=1)
 
 def trainTestValidationSplit(data, train_frac=0.8, validation_frac=0.1):
     """
@@ -307,6 +343,14 @@ def exportPlots(C, C_theory, loss, test_acc, val_acc, data_name, mnist_flag=Fals
     return
 
 def generateMnistFigure(mnist_data, mnist_labels):
+    """
+    export the mnist figure containing all the figures
+    input:
+        1. nd.array of the entire MNIST data
+        2. nd.array of the labels
+    output:
+        1. void
+    """
     im_path = os.path.join(os.getcwd(), "images")
     if not os.path.exists(im_path):
         os.makedirs(im_path)
