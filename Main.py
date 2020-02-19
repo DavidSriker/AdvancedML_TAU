@@ -32,18 +32,21 @@ def preProcessDataForLoop(train, test, valid):
 
 np.random.seed(2020)
 
+########## EDIT ##########
 var_dict = {'mean': [np.array([0.3, 0.3]), np.array([2, 2])],
             'cov': [np.array([[0.1, 0.0], [0.0, 0.6]]), np.array([[0.5, 0.0], [0.0, 0.2]])]}
+desired_digits = [3, 8]
+desired_iris = [0, 1]
+desired_wine = [0, 2]
+########## EDIT ##########
+
+
 d_1, d_2 = multivariateNormalCreate(var_dict['mean'], var_dict['cov'], 5000)
 multi_data = np.append(d_1, d_2, axis=0)
 plotMultivariateData(multi_data, True)
-
 data_path = os.path.join(os.getcwd(), "mnist_data")
-desired_digits = [3, 8]
 mnist_data = mnistPipeline(data_path, desired_digits)
-desired_iris = [0, 1]
 iris_data = irisPipeline(desired_iris)
-desired_wine = [0, 2]
 wine_data = winePipeline(desired_wine)
 
 # split to train and test
